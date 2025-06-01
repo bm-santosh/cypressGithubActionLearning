@@ -1,30 +1,43 @@
-name: End-to-end tests
-on: [push]
+name: Cypress Tests with Dependency and Artifact Caching
+
+on: push
+
 jobs:
-  cypress-run:
-    runs-on: ubuntu-22.04
+  install:
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      # Install NPM dependencies, cache them correctly
-      # and run all Cypress tests
-      # https://github.com/cypress-io/github-action
+        uses: actions/checkout@v4
+
+      - name: Cypress install
+        uses: cypress-io/github-action@v6
+        with:
+          # Disable running of tests within install job
+          runTests: false
+          build: npm run build
+
+      - name: Save build folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          if-no-files-found: error
+          path: build
+
+  cypress-run:
+    runs-on: ubuntu-24.04
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
+
       - name: Cypress run
-        uses: cypress-io/github-action@v5
-      # after the test run completes
-      # store videos and any screenshots
-      # NOTE: screenshots will be generated only if E2E test failed
-      # thus we store screenshots only on failures
-      # Alternative: create and commit an empty cypress/screenshots folder
-      # to always have something to upload
-      - uses: actions/upload-artifact@v3
-        if: failure()
+        uses: cypress-io/github-action@v6
         with:
-          name: cypress-screenshots
-          path: cypress/screenshots
-      # Test run video was always captured, so this action uses "always()" condition
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: cypress-videos
-          path: cypress/videos
+          start: npm start
+          browser: chrome
