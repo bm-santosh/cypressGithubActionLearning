@@ -1,14 +1,6 @@
 name: Cypress Parallel Tests (No Dashboard)
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-env:
-  NODE_VERSION: 20
-  CYPRESS_CI_BUILD_ID: ${{ github.run_id }}
+on: [push]
 
 jobs:
   test:
@@ -17,31 +9,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Number of parallel jobs (adjust based on your test count)
-        containers: [1, 2, 3]
+        containers: [1, 2, 3]  # 3 parallel jobs
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
+          node-version: 18
+      
       - name: Install dependencies
         run: npm ci
-
-      - name: Cache Cypress binary
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Run Cypress tests in parallel
+      
+      - name: Run Cypress tests
         run: |
-          npx cypress run \
-            --browser chrome \
-            --parallel \
-            --ci-build-id ${{ env.CYPRESS_CI_BUILD_ID }} \
-            --env split=${{ strategy.job-index }},total=${{ strategy.job-total }}
+          TOTAL_MACHINES=${{ strategy.job-total }}
+          THIS_MACHINE=${{ strategy.job-index }}
+          npx cypress run --browser chrome \
+            --env split=$THIS_MACHINE,total=$TOTAL_MACHINES
