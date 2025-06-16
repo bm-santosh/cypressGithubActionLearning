@@ -1,61 +1,47 @@
-name: Cypress Tests with Dependency and Artifact Caching
+name: Cypress Parallel Tests (No Dashboard)
 
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  NODE_VERSION: 20
+  CYPRESS_CI_BUILD_ID: ${{ github.run_id }}
 
 jobs:
-
-  install:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-
-      - name: use node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'  
-
-      - name: Install dependencies
-        run: npm install  
-      - name: Cypress install
-        uses: cypress-io/github-action@v6
-        with:
-          # Disable running of tests within install job
-          runTests: false
-        #  build: npm run build
-
-      - name: Save build folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          if-no-files-found: error
-          path: dist
-
-  cypress-run:
-    runs-on: ubuntu-24.04
-    needs: install
+  test:
+    name: Cypress tests
+    runs-on: ubuntu-latest
     strategy:
-      # don't fail the entire matrix on failure
       fail-fast: false
       matrix:
-        # run copies of the current job in parallel
-        containers: [1, 2]
-
+        # Number of parallel jobs (adjust based on your test count)
+        containers: [1, 2, 3]
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download the build folder
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          name: build
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Cypress binary
+        uses: actions/cache@v3
         with:
-          record: true
-          parallel: true
-          group: 'UI-Chrome'
-          start: npm start
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Run Cypress tests in parallel
+        run: |
+          npx cypress run \
+            --browser chrome \
+            --parallel \
+            --ci-build-id ${{ env.CYPRESS_CI_BUILD_ID }} \
+            --env split=${{ strategy.job-index }},total=${{ strategy.job-total }}
