@@ -9,7 +9,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3]  # 3 parallel jobs
+        threads: [1, 2, 3]  # 3 parallel jobs
+        include:
+          # Assign weights if some tests are heavier
+          - threads: 1
+            weight: 40  # Thread 1 gets 40% of tests
+          - threads: 2
+            weight: 40  # Thread 2 gets 30%
+          - threads: 3
+            weight: 20  # Thread 3 gets 20%
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
@@ -23,5 +31,6 @@ jobs:
         run: |
           TOTAL_MACHINES=${{ strategy.job-total }}
           THIS_MACHINE=${{ strategy.job-index }}
-          npx cypress run --browser chrome \
-            --env split=$THIS_MACHINE,total=$TOTAL_MACHINES
+          npx cypress run \
+            --browser chrome \
+            --env thread=${{ matrix.thread }},totalThreads=${{ matrix.threads }},threadWeight=${{ matrix.weight }}
