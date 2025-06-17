@@ -13,7 +13,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: "cypress1.yml"
-          token: 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
+          token: ${{ secrets.PAT_TOKEN }}
 
   trigger-smoke:
     runs-on: ubuntu-latest
@@ -22,4 +22,4 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: "cypress2.yml"
-          token: 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
+          token: ${{ secrets.PAT_TOKEN }}
