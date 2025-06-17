@@ -1,4 +1,4 @@
-name: Master Cypress Trigger
+name: Master Cypress Trigger test
 
 on:
   push:
