@@ -12,8 +12,10 @@ jobs:
       - name: Trigger Cypress E2E Workflow
         uses: peter-evans/repository-dispatch@v2
         with:
-          workflow: "cypress1.yml"
           token: ${{ secrets.GITHUB_TOKEN }}
+          repository: bm-santosh/cypressGithubActionLearning
+          event-type: trigger-cypress-e2e
+          client-payload: {}
 
   trigger-smoke:
     runs-on: ubuntu-latest
@@ -21,5 +23,7 @@ jobs:
       - name: Trigger Cypress Smoke Workflow
         uses: peter-evans/repository-dispatch@v2
         with:
-          workflow: "cypress2.yml"
           token: ${{ secrets.GITHUB_TOKEN }}
+          repository: bm-santosh/cypressGithubActionLearning
+          event-type: trigger-cypress-smoke
+          client-payload: {}
