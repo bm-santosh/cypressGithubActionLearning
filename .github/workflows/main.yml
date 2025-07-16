@@ -15,7 +15,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: bm-santosh/cypressGithubActionLearning
           event-type: trigger-cypress-e2e
-          client-payload: {}
 
   trigger-smoke:
     runs-on: ubuntu-latest
@@ -26,4 +25,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: bm-santosh/cypressGithubActionLearning
           event-type: trigger-cypress-smoke
-          client-payload: {}
